@@ -1,0 +1,31 @@
+{
+	"geode": "5.7.1",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "m336.gdps-badges",
+	"name": "GDPS Badges",
+	"version": "v1.0.0-beta.1",
+	"developer": "M336",
+	"description": "Add custom badges for your GDPS from SFTP!",
+	"links": {
+		"source": "https://github.com/M336G/GDPSBadges"
+	},
+	"issues": {
+		"info": "Having an issue with the mod?",
+		"url": "https://github.com/M336G/GDPSBadges/issues"
+	},
+	"tags": [
+		"enhancement",
+		"online",
+		"customization"
+	],
+	"dependencies": {
+		"geode.node-ids": ">=v1.23.3",
+		"alphalaneous.badgify": ">=v1.0.2",
+		"km7dev.server_api": { "version": ">=v4.0.0", "required": false }
+	}
+}
