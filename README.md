@@ -71,7 +71,8 @@ This mod allows Geometry Dash Private Server owners to set custom badges dependi
         "name": "Demon Grinder",
         "description": "This player has beaten over <cr>2,500</c> demon levels!",
         "requirements": {
-            "minDemons": 2500
+            "minDemons": 2500,
+            "maxDemons": 9999
         }
     }
 ]
