@@ -72,7 +72,7 @@ $on_mod(Loaded) {
                 log::info("Downloaded & stored {} badge's texture", id);
             }
 
-            queueInMainThread([id, name, description, requirements, path = badgeIconPath.string()] {
+            queueInMainThread([id, name, description, requirements, path = utils::string::pathToString(badgeIconPath)] {
                 alpha::badgify::registerBadge(
                     fmt::format("{}"_spr, id),
                     name,
