@@ -10,7 +10,7 @@
 	"name": "GDPS Badges",
 	"version": "v1.0.0-beta.1",
 	"developer": "M336",
-	"description": "Add custom badges for your GDPS from SFTP!",
+	"description": "Add custom badges for players of your GDPS!",
 	"links": {
 		"source": "https://github.com/M336G/GDPSBadges"
 	},
