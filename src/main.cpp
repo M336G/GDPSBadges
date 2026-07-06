@@ -4,18 +4,18 @@
 
 using namespace geode::prelude;
 
-static std::chrono::hours constexpr g_badgeIconMaxAge = std::chrono::hours(1);
-
 $on_mod(Loaded) {
     std::filesystem::path const badgesSavePath = Mod::get()->getSaveDir() / "badges";
     std::filesystem::create_directories(badgesSavePath);
+
+    std::chrono::hours const maxCacheTime = std::chrono::hours(Mod::get()->getSettingValue<int64_t>("max-cache-time"));
 
     if (!Utils::isOnGdps()) {
         log::warn("Mod disabled as it is not used on a GDPS");
         return;
     }
 
-    async::spawn([badgesSavePath] -> arc::Future<> {
+    async::spawn([badgesSavePath, maxCacheTime] -> arc::Future<> {
         auto res = co_await web::WebRequest().get(Utils::getBaseUrl() + "/badges/badges.json");
 
         auto const bodyRaw = res.json();
@@ -56,7 +56,7 @@ $on_mod(Loaded) {
             }
 
             auto badgeIconPath = badgesSavePath / (id + ".png");
-            if (!std::filesystem::exists(badgeIconPath) || std::chrono::file_clock::now() - std::filesystem::last_write_time(badgeIconPath) > g_badgeIconMaxAge) {
+            if (!std::filesystem::exists(badgeIconPath) || maxCacheTime.count() == 0 || std::chrono::file_clock::now() - std::filesystem::last_write_time(badgeIconPath) > maxCacheTime) {
                 auto res = co_await web::WebRequest().get(fmt::format("{}/badges/{}.png", Utils::getBaseUrl(), id));
                 if (!res.ok()) {
                     log::error("Skipping {}: {}", id, res.errorMessage());
@@ -78,9 +78,10 @@ $on_mod(Loaded) {
                     name,
                     !description.empty() ? description : "This is a <cj>custom badge</c> added by this <cl>GDPS</c>!",
                     [requirements, path](alpha::badgify::Badge const& badge) {
+                        if (!badge.user)
+                            return;
+
                         if (requirements["players"].isArray()) {
-                            if (!badge.user) return;
-                            
                             std::vector<matjson::Value> const players = requirements["players"].asArray().unwrap();
                             
                             auto hasPlayer = false;
@@ -95,69 +96,79 @@ $on_mod(Loaded) {
                         }
 
                         if (requirements["modBadge"].isString()) {
-                            std::string const modBadge = requirements["modBadge"].asString().unwrap();
+                            std::string const modBadge = requirements["modBadge"].asString().unwrapOrDefault();
 
-                            if (modBadge == "leaderboard" && badge.modStatus != alpha::badgify::ModStatus::Leaderboard) {
-                                return;
-                            } else if (modBadge == "elder" && badge.modStatus != alpha::badgify::ModStatus::Elder) {
-                                return;
-                            } else if (modBadge == "regular" && badge.modStatus != alpha::badgify::ModStatus::Regular) {
-                                return;
+                            bool isValid = false;
+                            switch (badge.modStatus) {
+                                case alpha::badgify::ModStatus::Leaderboard:
+                                    isValid = (modBadge == "leaderboard");
+                                    break;
+                                case alpha::badgify::ModStatus::Elder:
+                                    isValid = (modBadge == "elder");
+                                    break;
+                                case alpha::badgify::ModStatus::Regular:
+                                    isValid = (modBadge == "regular");
+                                    break;
+                                default:
+                                    isValid = false;
+                                    break;
                             }
+                            
+                            if (!isValid) return;
                         }
 
                         if (requirements["minRank"].isNumber()) {
                             auto const minRank = requirements["minRank"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_globalRank < minRank) return;
+                            if (badge.user->m_globalRank == 0 || badge.user->m_globalRank > minRank) return;
                         }
                         if (requirements["maxRank"].isNumber()) {
                             auto const maxRank = requirements["maxRank"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_globalRank > maxRank) return;
+                            if (badge.user->m_globalRank != 0 && badge.user->m_globalRank < maxRank) return;
                         }
                         
                         if (requirements["minStars"].isNumber()) {
                             auto const minStars = requirements["minStars"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_stars < minStars) return;
+                            if (badge.user->m_stars < minStars) return;
                         }
                         if (requirements["maxStars"].isNumber()) {
                             auto const maxStars = requirements["maxStars"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_stars > maxStars) return;
+                            if (badge.user->m_stars > maxStars) return;
                         }
 
                         if (requirements["minMoons"].isNumber()) {
                             auto const minMoons = requirements["minMoons"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_moons < minMoons) return;
+                            if (badge.user->m_moons < minMoons) return;
                         }
                         if (requirements["maxMoons"].isNumber()) {
                             auto const maxMoons = requirements["maxMoons"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_moons > maxMoons) return;
+                            if (badge.user->m_moons > maxMoons) return;
                         }
 
                         if (requirements["minGoldCoins"].isNumber()) {
                             auto const minGoldCoins = requirements["minGoldCoins"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_secretCoins < minGoldCoins) return;
+                            if (badge.user->m_secretCoins < minGoldCoins) return;
                         }
                         if (requirements["maxGoldCoins"].isNumber()) {
                             auto const maxGoldCoins = requirements["maxGoldCoins"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_secretCoins > maxGoldCoins) return;
+                            if (badge.user->m_secretCoins > maxGoldCoins) return;
                         }
                         
                         if (requirements["minSilverCoins"].isNumber()) {
                             auto const minSilverCoins = requirements["minSilverCoins"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_userCoins < minSilverCoins) return;
+                            if (badge.user->m_userCoins < minSilverCoins) return;
                         }
                         if (requirements["maxSilverCoins"].isNumber()) {
                             auto const maxSilverCoins = requirements["maxSilverCoins"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_userCoins > maxSilverCoins) return;
+                            if (badge.user->m_userCoins > maxSilverCoins) return;
                         }
 
                         if (requirements["minDemons"].isNumber()) {
                             auto const minDemons = requirements["minDemons"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_demons < minDemons) return;
+                            if (badge.user->m_demons < minDemons) return;
                         }
                         if (requirements["maxDemons"].isNumber()) {
                             auto const maxDemons = requirements["maxDemons"].asInt().unwrap();
-                            if (!badge.user || badge.user->m_demons > maxDemons) return;
+                            if (badge.user->m_demons > maxDemons) return;
                         }
 
                         alpha::badgify::showBadge(
@@ -172,5 +183,31 @@ $on_mod(Loaded) {
         }
 
         log::info("Finished loading badges!");
+
+        if (maxCacheTime.count() > 0) {
+            // Delete cached badges' icon that aren't in the badges list
+            for (std::filesystem::directory_entry const& file : std::filesystem::directory_iterator(badgesSavePath)) {
+                std::filesystem::path const badgePath = file.path();
+                std::string const badgeId = badgePath.stem().string();
+
+                bool badgeExists = false;
+                for (matjson::Value const& badge : badges) {
+                    if (!badge["id"].isString())
+                        continue;
+
+                    if (badge["id"].asString().unwrap() == badgeId) {
+                        badgeExists = true;
+                        break;
+                    }
+                }
+
+                if (!badgeExists)
+                    std::filesystem::remove(badgePath);
+            }
+        } else {
+            // If the cache is disabled then just delete the badges folder just in
+            // case anything was there previously
+            std::filesystem::remove_all(badgesSavePath);
+        }
     });
 }

@@ -8,7 +8,7 @@
 	},
 	"id": "m336.gdps-badges",
 	"name": "GDPS Badges",
-	"version": "v1.0.0-beta.2",
+	"version": "v1.0.0",
 	"developer": "M336",
 	"description": "Add custom badges for players of your GDPS!",
 	"links": {
@@ -24,8 +24,22 @@
 		"customization"
 	],
 	"dependencies": {
-		"geode.node-ids": ">=v1.23.3",
 		"alphalaneous.badgify": ">=v1.0.2",
 		"km7dev.server_api": { "version": ">=v4.0.0", "required": false }
+	},
+	"settings": {
+		"max-cache-time": {
+			"type": "int",
+			"name": "Maximum Cache Time",
+			"description": "How long (in hours) should icons be cached locally before being fetched again (setting this to 0 disables the cache)",
+			"default": 1,
+			"min": 0,
+			"max": 720,
+			"control": {
+				"arrows": true,
+				"input": true
+			},
+			"requires-restart": true
+		}
 	}
 }
