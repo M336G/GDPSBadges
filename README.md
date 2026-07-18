@@ -1,6 +1,9 @@
 # GDPS Badges
 **ONLY useful on Geometry Dash Private Servers.**
 
+> [!TIP]
+> **Use [Badges API](https://geode-sdk.org/mods/jouca.badgesapi) or [Badgify](https://geode-sdk.org/mods/alphalaneous.badgify) to show more than one badge per profile!**
+
 This mod allows Geometry Dash Private Server owners to set custom badges depending on various statistics of players using this mod (amount of stars, moons, coins obtained, demons beaten...).
 
 ## Setup (GDPS owners only)

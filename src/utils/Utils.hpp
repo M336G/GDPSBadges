@@ -5,4 +5,9 @@ namespace Utils {
     bool isOnGdps();
 
     bool isValidId(std::string_view id);
+
+    bool badgeMeetsRequirements(GJUserScore *score, matjson::Value const& requirements);
+
+    bool isBadgifyLoaded();
+    bool isBadgesApiLoaded();
 }

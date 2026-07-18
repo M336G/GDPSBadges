@@ -1,5 +1,7 @@
 #include <Geode/Geode.hpp>
 #include <alphalaneous.badgify/include/Badgify.hpp>
+
+#include "managers/SessionManager.hpp"
 #include "utils/Utils.hpp"
 
 using namespace geode::prelude;
@@ -38,6 +40,7 @@ $on_mod(Loaded) {
 
         log::info("Loading {} badges...", badges.size());
 
+        int index = 0;
         for (matjson::Value const& badge : badges) {
             if (!badge["id"].isString() || !badge["name"].isString()) {
                 log::error("Skipping badge unknown: invalid properties");
@@ -72,113 +75,48 @@ $on_mod(Loaded) {
                 log::info("Downloaded & stored {} badge's texture", id);
             }
 
-            queueInMainThread([id, name, description, requirements, path = utils::string::pathToString(badgeIconPath)] {
-                alpha::badgify::registerBadge(
-                    fmt::format("{}"_spr, id),
+            auto const iconPath = utils::string::pathToString(badgeIconPath);
+
+            if (Utils::isBadgifyLoaded()) {
+                queueInMainThread([id, name, description, requirements, iconPath] {
+                    alpha::badgify::registerBadge(
+                        fmt::format("{}"_spr, id),
+                        name,
+                        !description.empty() ? description : "This is a <cj>custom badge</c> added by this <cl>GDPS</c>!",
+                        [requirements, iconPath](alpha::badgify::Badge const& badge) {
+                            if (!Utils::badgeMeetsRequirements(badge.user, requirements))
+                                return;
+
+                            alpha::badgify::showBadge(
+                                badge,
+                                CCSprite::create(iconPath.c_str())
+                            );
+                        }
+                    );
+                });
+            } else {
+                float scale = 1.f;
+
+                auto image = new CCImage();
+                if (image->initWithImageFile(iconPath.c_str())) {
+                    int width = image->getWidth();
+                    int height = image->getHeight();
+
+                    if (width > 0 && height > 0)
+                        scale = 92.f / std::max(width, height);
+                }
+                image->release();
+
+                SessionManager::badges[Utils::isBadgesApiLoaded() ? fmt::format("{}-badge:{}", id, index + 1) : fmt::format("{}-badge", id)] = {
                     name,
                     !description.empty() ? description : "This is a <cj>custom badge</c> added by this <cl>GDPS</c>!",
-                    [requirements, path](alpha::badgify::Badge const& badge) {
-                        if (!badge.user)
-                            return;
+                    iconPath,
+                    scale,
+                    requirements
+                };
+            }
 
-                        if (requirements["players"].isArray()) {
-                            std::vector<matjson::Value> const players = requirements["players"].asArray().unwrap();
-                            
-                            auto hasPlayer = false;
-                            for (matjson::Value const& player : players) {
-                                if (player.isNumber() && player.asInt().unwrap() == badge.user->m_accountID) {
-                                    hasPlayer = true;
-                                    break;
-                                }
-                            }
-
-                            if (!hasPlayer) return;
-                        }
-
-                        if (requirements["modBadge"].isString()) {
-                            std::string const modBadge = requirements["modBadge"].asString().unwrapOrDefault();
-
-                            bool isValid = false;
-                            switch (badge.modStatus) {
-                                case alpha::badgify::ModStatus::Leaderboard:
-                                    isValid = (modBadge == "leaderboard");
-                                    break;
-                                case alpha::badgify::ModStatus::Elder:
-                                    isValid = (modBadge == "elder");
-                                    break;
-                                case alpha::badgify::ModStatus::Regular:
-                                    isValid = (modBadge == "regular");
-                                    break;
-                                default:
-                                    isValid = false;
-                                    break;
-                            }
-                            
-                            if (!isValid) return;
-                        }
-
-                        if (requirements["minRank"].isNumber()) {
-                            auto const minRank = requirements["minRank"].asInt().unwrap();
-                            if (badge.user->m_globalRank == 0 || badge.user->m_globalRank > minRank) return;
-                        }
-                        if (requirements["maxRank"].isNumber()) {
-                            auto const maxRank = requirements["maxRank"].asInt().unwrap();
-                            if (badge.user->m_globalRank != 0 && badge.user->m_globalRank < maxRank) return;
-                        }
-                        
-                        if (requirements["minStars"].isNumber()) {
-                            auto const minStars = requirements["minStars"].asInt().unwrap();
-                            if (badge.user->m_stars < minStars) return;
-                        }
-                        if (requirements["maxStars"].isNumber()) {
-                            auto const maxStars = requirements["maxStars"].asInt().unwrap();
-                            if (badge.user->m_stars > maxStars) return;
-                        }
-
-                        if (requirements["minMoons"].isNumber()) {
-                            auto const minMoons = requirements["minMoons"].asInt().unwrap();
-                            if (badge.user->m_moons < minMoons) return;
-                        }
-                        if (requirements["maxMoons"].isNumber()) {
-                            auto const maxMoons = requirements["maxMoons"].asInt().unwrap();
-                            if (badge.user->m_moons > maxMoons) return;
-                        }
-
-                        if (requirements["minGoldCoins"].isNumber()) {
-                            auto const minGoldCoins = requirements["minGoldCoins"].asInt().unwrap();
-                            if (badge.user->m_secretCoins < minGoldCoins) return;
-                        }
-                        if (requirements["maxGoldCoins"].isNumber()) {
-                            auto const maxGoldCoins = requirements["maxGoldCoins"].asInt().unwrap();
-                            if (badge.user->m_secretCoins > maxGoldCoins) return;
-                        }
-                        
-                        if (requirements["minSilverCoins"].isNumber()) {
-                            auto const minSilverCoins = requirements["minSilverCoins"].asInt().unwrap();
-                            if (badge.user->m_userCoins < minSilverCoins) return;
-                        }
-                        if (requirements["maxSilverCoins"].isNumber()) {
-                            auto const maxSilverCoins = requirements["maxSilverCoins"].asInt().unwrap();
-                            if (badge.user->m_userCoins > maxSilverCoins) return;
-                        }
-
-                        if (requirements["minDemons"].isNumber()) {
-                            auto const minDemons = requirements["minDemons"].asInt().unwrap();
-                            if (badge.user->m_demons < minDemons) return;
-                        }
-                        if (requirements["maxDemons"].isNumber()) {
-                            auto const maxDemons = requirements["maxDemons"].asInt().unwrap();
-                            if (badge.user->m_demons > maxDemons) return;
-                        }
-
-                        alpha::badgify::showBadge(
-                            badge,
-                            CCSprite::create(path.c_str())
-                        );
-                    }
-                );
-            });
-
+            index++;
             log::info("Loaded {} badge", id);
         }
 

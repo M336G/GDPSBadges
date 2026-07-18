@@ -1,5 +1,5 @@
 {
-	"geode": "5.7.1",
+	"geode": "5.8.2",
 	"gd": {
 		"win": "2.2081",
 		"android": "2.2081",
@@ -8,10 +8,11 @@
 	},
 	"id": "m336.gdps-badges",
 	"name": "GDPS Badges",
-	"version": "v1.0.0",
+	"version": "v1.1.0",
 	"developer": "M336",
 	"description": "Add custom badges for players of your GDPS!",
 	"links": {
+		"community": "https://discord.gg/adbqkyvbZa",
 		"source": "https://github.com/M336G/GDPSBadges"
 	},
 	"issues": {
@@ -24,7 +25,7 @@
 		"customization"
 	],
 	"dependencies": {
-		"alphalaneous.badgify": ">=v1.0.2",
+		"alphalaneous.badgify": { "version": ">=v1.0.2", "required": false },
 		"km7dev.server_api": { "version": ">=v4.0.0", "required": false }
 	},
 	"settings": {
