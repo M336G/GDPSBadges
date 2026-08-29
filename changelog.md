@@ -1,3 +1,7 @@
+# v1.1.1
+- Switched Alphalaneous' Badgify soft-dependency to Dasshu's Badgified
+    - From now on, using Badgify to display badges will simply not work and the mod will prompt you to use Badgified instead
+
 # v1.1.0
 - Made the mod independent of any other mod due to Badgify's recent deprecation;
     - Using Badgify will still work as before

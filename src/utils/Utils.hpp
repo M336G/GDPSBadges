@@ -9,5 +9,6 @@ namespace Utils {
     bool badgeMeetsRequirements(GJUserScore *score, matjson::Value const& requirements);
 
     bool isBadgifyLoaded();
+    bool isBadgifiedLoaded();
     bool isBadgesApiLoaded();
 }

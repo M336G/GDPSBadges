@@ -97,6 +97,11 @@ bool Utils::isBadgifyLoaded() {
     return isBadgifyLoaded;
 }
 
+bool Utils::isBadgifiedLoaded() {
+    static bool isBadgifiedLoaded = Loader::get()->isModLoaded("dasshu.badgified");
+    return isBadgifiedLoaded;
+}
+
 bool Utils::isBadgesApiLoaded() {
     static bool isBadgesApiLoaded = Loader::get()->isModLoaded("jouca.badgesapi");
     return isBadgesApiLoaded;

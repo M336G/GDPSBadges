@@ -1,10 +1,11 @@
 #include <Geode/Geode.hpp>
-#include <alphalaneous.badgify/include/Badgify.hpp>
+#include <dasshu.badgified/include/Badgified.hpp>
 
 #include "managers/SessionManager.hpp"
 #include "utils/Utils.hpp"
 
 using namespace geode::prelude;
+using namespace dasshu::badgified;
 
 $on_mod(Loaded) {
     std::filesystem::path const badgesSavePath = Mod::get()->getSaveDir() / "badges";
@@ -77,17 +78,17 @@ $on_mod(Loaded) {
 
             auto const iconPath = utils::string::pathToString(badgeIconPath);
 
-            if (Utils::isBadgifyLoaded()) {
+            if (Utils::isBadgifiedLoaded() && !Utils::isBadgifyLoaded()) {
                 queueInMainThread([id, name, description, requirements, iconPath] {
-                    alpha::badgify::registerBadge(
+                    registerBadge(
                         fmt::format("{}"_spr, id),
                         name,
                         !description.empty() ? description : "This is a <cj>custom badge</c> added by this <cl>GDPS</c>!",
-                        [requirements, iconPath](alpha::badgify::Badge const& badge) {
+                        [requirements, iconPath](Badge const& badge) {
                             if (!Utils::badgeMeetsRequirements(badge.user, requirements))
                                 return;
 
-                            alpha::badgify::showBadge(
+                            showBadge(
                                 badge,
                                 CCSprite::create(iconPath.c_str())
                             );

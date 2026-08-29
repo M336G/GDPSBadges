@@ -1,3 +1,5 @@
+#include <Geode/Geode.hpp>
+
 #include "../managers/SessionManager.hpp"
 #include "../utils/Utils.hpp"
 
@@ -19,6 +21,16 @@ class $modify(MenuLayer) {
             alert->show();
 
             SessionManager::shownGdpsWarning = true;
+        }
+
+        if (Utils::isBadgifyLoaded() && !SessionManager::shownBadgifyWarning) {
+            Notification::create(
+                "GDPS Badges will not work with Badgify. Use Badgified instead",
+                NotificationIcon::Warning,
+                3.f
+            )->show();
+
+            SessionManager::shownBadgifyWarning = true;
         }
 
         return true;

@@ -14,4 +14,5 @@ namespace SessionManager {
     
     extern std::unordered_map<std::string, BadgeInfo> badges;
     extern bool shownGdpsWarning;
+    extern bool shownBadgifyWarning;
 };

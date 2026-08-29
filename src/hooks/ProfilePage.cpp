@@ -12,7 +12,7 @@ class $modify(GDPSBadgesProfilePage, ProfilePage) {
     void loadPageFromUserInfo(GJUserScore *score) {
         ProfilePage::loadPageFromUserInfo(score);
 
-        if (Utils::isBadgifyLoaded()) return;
+        if (Utils::isBadgifiedLoaded() || Utils::isBadgifyLoaded()) return;
 
         auto *usernameMenu = static_cast<CCMenu *>(m_mainLayer->getChildByIDRecursive("username-menu"));
         if (!usernameMenu) return;
